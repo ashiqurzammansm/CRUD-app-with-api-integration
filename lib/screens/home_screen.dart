@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:crud_app/services/api_service.dart';
-import 'package:crud_app/models/item_model.dart';
+import 'package:crud_app/models/product_model.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -9,24 +9,24 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService apiService = ApiService();
-  List<Item> items = [];
+  List<Product> products = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadItems();
+    _loadProducts();
   }
 
-  Future<void> _loadItems() async {
+  Future<void> _loadProducts() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      List<dynamic> data = await apiService.getItems();
+      List<dynamic> data = await apiService.getProducts();
       setState(() {
-        items = data.map((json) => Item.fromJson(json)).toList();
+        products = data.map((json) => Product.fromJson(json)).toList();
         isLoading = false;
       });
     } catch (e) {
@@ -37,20 +37,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _deleteItem(int id) async {
-    await apiService.deleteItem(id);
-    _loadItems(); // Refresh the list after deleting
-  }
-
-  void _addItem() {
-    // For simplicity, just add a hardcoded item.
-    apiService.createItem({
-      'title': 'New Post',
-      'body': 'This is a new post',
+  void _addToCart(int productId) {
+    apiService.addToCart({
+      "userId": 1,
+      "date": "2024-09-16",
+      "products": [
+        {"productId": productId, "quantity": 1}
+      ]
     }).then((response) {
-      if (response.statusCode == 201) {
-        print("Post created successfully");
-        _loadItems(); // Refresh the list
+      if (response.statusCode == 200) {
+        print("Product added to cart successfully");
       }
     });
   }
@@ -59,26 +55,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('CRUD App with JSONPlaceholder API'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _addItem,  // Trigger to add a new item
-          ),
-        ],
+        title: Text('CRUD app with API integration'),  // Update AppBar title here
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: items.length,
+        itemCount: products.length,
         itemBuilder: (context, index) {
-          final item = items[index];
+          final product = products[index];
           return ListTile(
-            title: Text(item.title),
-            subtitle: Text(item.body),
+            leading: Image.network(product.image, width: 50, height: 50),
+            title: Text(product.title),
+            subtitle: Text("\$${product.price.toStringAsFixed(2)}"),
             trailing: IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: () => _deleteItem(item.id),  // Delete action
+              icon: Icon(Icons.add_shopping_cart),
+              onPressed: () => _addToCart(product.id),
             ),
           );
         },

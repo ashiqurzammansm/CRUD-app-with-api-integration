@@ -2,40 +2,35 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String apiUrl = "https://jsonplaceholder.typicode.com/posts";
+  final String baseUrl = "https://fakestoreapi.com";
 
-  // Create a new post (POST request)
-  Future<http.Response> createItem(Map<String, dynamic> itemData) async {
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(itemData),
-    );
-    return response;
-  }
-
-  // Read all posts (GET request)
-  Future<List<dynamic>> getItems() async {
-    final response = await http.get(Uri.parse(apiUrl));
+  // Get list of products
+  Future<List<dynamic>> getProducts() async {
+    final response = await http.get(Uri.parse('$baseUrl/products'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load items');
+      throw Exception('Failed to load products');
     }
   }
 
-  // Update a post (PUT request)
-  Future<http.Response> updateItem(int id, Map<String, dynamic> itemData) async {
-    final response = await http.put(
-      Uri.parse('$apiUrl/$id'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(itemData),
-    );
-    return response;
+  // Get cart details by cart ID
+  Future<dynamic> getCart(int cartId) async {
+    final response = await http.get(Uri.parse('$baseUrl/carts/$cartId'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load cart');
+    }
   }
 
-  // Delete a post (DELETE request)
-  Future<void> deleteItem(int id) async {
-    await http.delete(Uri.parse('$apiUrl/$id'));
+  // Add a product to the cart
+  Future<http.Response> addToCart(Map<String, dynamic> cartData) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/carts'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(cartData),
+    );
+    return response;
   }
 }
